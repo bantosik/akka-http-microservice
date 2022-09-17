@@ -29,8 +29,11 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http" % akkaHttpV,
     "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceV,
     "com.typesafe.akka" %% "akka-testkit" % akkaV,
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % "test"
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % "test",
   ).map(_.cross(CrossVersion.for3Use2_13))
 }
+
+libraryDependencies += ("com.lihaoyi" %% "ammonite-sshd" % "2.5.4-26-9cd15abe").cross(CrossVersion.constant("2.13.0"))
+
 
 Revolver.settings

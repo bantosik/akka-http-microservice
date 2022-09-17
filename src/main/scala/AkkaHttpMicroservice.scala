@@ -4,8 +4,8 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import akka.http.scaladsl.model.StatusCodes._
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.model.StatusCodes.*
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.{Flow, Sink, Source}
@@ -14,10 +14,12 @@ import com.typesafe.config.ConfigFactory
 import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
+import org.apache.sshd.server.auth.password.PasswordAuthenticator
+import org.apache.sshd.server.session.ServerSession
 
 import java.io.IOException
 import scala.concurrent.{ExecutionContext, Future}
-import scala.math._
+import scala.math.*
 
 enum IpApiResponseStatus {
   case Success, Fail
@@ -129,6 +131,21 @@ object AkkaHttpMicroservice extends App with Service {
 
   override val config = ConfigFactory.load()
   override val logger = Logging(system, "AkkaHttpMicroservice")
+
+  import ammonite.sshd._
+
+  val replServer = new SshdRepl(
+    SshServerConfig(
+      address = "localhost", // or "0.0.0.0" for public-facing shells
+      port = 22222, // Any available port
+      passwordAuthenticator = Some(new PasswordAuthenticator {
+        override def authenticate(username: String, password: String, session: ServerSession): Boolean = {
+          username == "" && password == ""
+        }
+      }) // or publicKeyAuthenticator
+    )
+  )
+  replServer.start()
 
   Http().newServerAt(config.getString("http.interface"), config.getInt("http.port")).bindFlow(routes)
 }
